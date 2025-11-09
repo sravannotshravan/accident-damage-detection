@@ -7,13 +7,15 @@ from ultralytics import YOLO
 import bcrypt
 from collections import Counter
 from dotenv import load_dotenv
+from datetime import datetime
 
 
 load_dotenv()
 
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+# Generate a secure secret key for Flask sessions
+app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production-' + os.urandom(24).hex())
 
 
 def connect_to_db():
@@ -100,18 +102,35 @@ def login():
         if connection:
             try:
                 with connection.cursor() as cursor:
-                    query = "SELECT password FROM user_info WHERE email = %s"
+                    query = "SELECT user_id, name, password FROM user_info WHERE email = %s"
                     cursor.execute(query, (email,))
                     result = cursor.fetchone()
-                    if result and bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
-                        session['user_email'] = email  # Store user email in session
-                        flash("Login successful!", "success")
-                        return redirect(url_for('dashboard'))
+                    
+                    if result:
+                        user_id, name, stored_password = result
+                        print(f"User found: {name}")
+                        
+                        # Check password
+                        if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
+                            print("Password matched!")
+                            session['user_email'] = email  # Store user email in session
+                            session['user_name'] = name  # Store user name in session
+                            flash("Login successful! Welcome back, " + name, "success")
+                            return redirect(url_for('dashboard'))
+                        else:
+                            print("Password did not match")
+                            flash("Invalid email or password.", "error")
                     else:
+                        print(f"No user found with email: {email}")
                         flash("Invalid email or password.", "error")
-            except connector.Error as e:
-                print(f"Error executing query: {e}")
+                        
+            except Exception as e:
+                print(f"Error during login: {e}")
+                import traceback
+                traceback.print_exc()
                 flash("An error occurred during login. Please try again.", "error")
+            finally:
+                connection.close()
         else:
             flash("Database connection failed. Please try again later.", "error")
 
@@ -127,7 +146,7 @@ def logout():
 
 
 # Load YOLO model
-model_path = "D:/Vehicle Damage Detection/models/model weights/best.pt"
+model_path = os.path.join(os.path.dirname(__file__), "models", "model weights", "best.pt")
 model = YOLO(model_path)
 
 
@@ -145,7 +164,10 @@ def dashboard():
             return render_template('dashboard.html')
         
         # Save the uploaded image
-        image_path = os.path.join('D:/Vehicle Damage Detection/static', 'uploaded_image.jpg')
+        static_folder = os.path.join(os.path.dirname(__file__), 'static')
+        if not os.path.exists(static_folder):
+            os.makedirs(static_folder)
+        image_path = os.path.join(static_folder, 'uploaded_image.jpg')
         print("File uploaded successfully")
         
         file.save(image_path)
@@ -157,7 +179,7 @@ def dashboard():
         class_counts = Counter(class_ids)
         # print(f"Class counts : {class_counts}")
         # Save the image with detections
-        detected_image_path = os.path.join('D:/Vehicle Damage Detection/static', 'detected_image.jpg')
+        detected_image_path = os.path.join(static_folder, 'detected_image.jpg')
         detected_image_path = result[0].save(detected_image_path)
         print(f"Detected image path : {detected_image_path}")
         # Get the user's email from session
@@ -170,7 +192,7 @@ def dashboard():
         # Fetch part prices from the database
         part_prices = get_part_prices(user_email, class_counts)
         # print(f"Part prices : {part_prices}")
-        return render_template('estimate.html', original_image='uploaded_image.jpg', detected_image='detected_image.jpg', part_prices=part_prices)
+        return render_template('estimate.html', original_image='uploaded_image.jpg', detected_image='detected_image.jpg', part_prices=part_prices, now=datetime.now())
 
     return render_template('dashboard.html')
 
@@ -184,29 +206,59 @@ def get_part_prices(email, class_counts):
                 cursor.execute("SELECT car_brand, model FROM user_info WHERE email = %s", (email,))
                 user_data = cursor.fetchone()
                 if not user_data:
-                    print("User not found")
+                    print("❌ User not found")
                     return {}
 
-                car_brand = user_data['car_brand']
-                car_model = user_data['model']
+                car_brand = user_data['car_brand'].strip()
+                car_model = user_data['model'].strip()
+                print(f"🚗 User's car: Brand='{car_brand}' Model='{car_model}'")
 
                 # Fetch part prices
                 prices = {}
                 for class_id, count in class_counts.items():
                     part_name = get_part_name_from_id(class_id)
-                    # print(f"Parts name: {part_name}")
+                    print(f"🔍 Looking for part: {part_name} (detected {count}x)")
+                    
                     if part_name:
+                        # Try exact match first
                         cursor.execute(
                             "SELECT price FROM car_models WHERE brand = %s AND model = %s AND part = %s",
                             (car_brand, car_model, part_name)
                         )
                         price_data = cursor.fetchone()
-                        # print(f"Price data : {price_data}")
+                        
+                        # If no exact match, try case-insensitive
+                        if not price_data:
+                            print(f"   ⚠️  No exact match, trying case-insensitive...")
+                            cursor.execute(
+                                "SELECT price FROM car_models WHERE UPPER(brand) = UPPER(%s) AND UPPER(model) = UPPER(%s) AND UPPER(part) = UPPER(%s)",
+                                (car_brand, car_model, part_name)
+                            )
+                            price_data = cursor.fetchone()
+                        
+                        # If still no match, try just brand and part
+                        if not price_data:
+                            print(f"   ⚠️  No model match, trying just brand and part...")
+                            cursor.execute(
+                                "SELECT price FROM car_models WHERE UPPER(brand) = UPPER(%s) AND UPPER(part) = UPPER(%s) LIMIT 1",
+                                (car_brand, part_name)
+                            )
+                            price_data = cursor.fetchone()
+                        
                         if price_data:
                             price_per_part = price_data['price']
                             total_price = price_per_part * count
                             prices[part_name] = {'count': count, 'price': price_per_part, 'total': total_price}
-                # print(f"Prices : {prices}")
+                            print(f"   ✅ Found price: ₹{price_per_part} x {count} = ₹{total_price}")
+                        else:
+                            print(f"   ❌ No price found for {part_name}")
+                            # Check what's actually in the database
+                            cursor.execute("SELECT DISTINCT brand, model FROM car_models WHERE UPPER(brand) = UPPER(%s) LIMIT 5", (car_brand,))
+                            available = cursor.fetchall()
+                            if available:
+                                print(f"   💡 Available models for {car_brand}: {[m['model'] for m in available]}")
+                
+                print(f"💰 Total prices found: {len(prices)} parts")
                 return prices
         except connector.Error as e:
             print(f"Error executing query: {e}")

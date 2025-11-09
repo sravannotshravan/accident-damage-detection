@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CarDetect AI</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .profile-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .profile-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 3rem;
+            color: #fff;
+        }
+
+        .profile-header h1 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-header p {
+            color: #7f8c8d;
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .profile-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-section h2 {
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .profile-section h2 i {
+            color: #667eea;
+        }
+
+        .profile-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-field label {
+            display: block;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .profile-field .value {
+            color: var(--dark-color);
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-field .value i {
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #fff;
+        }
+
+        .btn-dashboard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-container {
+                padding: 0 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-car-crash"></i>
+                CarDetect AI
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('view_profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h1>{{ user_info.name }}</h1>
+            <p>Member since {{ user_info.created_at.strftime('%B %Y') if user_info.created_at else 'Recently' }}</p>
+        </div>
+
+        <div class="profile-content">
+            <!-- Personal Information -->
+            <div class="profile-section">
+                <h2>
+                    <i class="fas fa-user-circle"></i>
+                    Personal Information
+                </h2>
+                
+                <div class="profile-field">
+                    <label>Full Name</label>
+                    <div class="value">
+                        <i class="fas fa-user"></i>
+                        <span>{{ user_info.name }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Email Address</label>
+                    <div class="value">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ user_info.email }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Phone Number</label>
+                    <div class="value">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ user_info.contact_number }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Address</label>
+                    <div class="value">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ user_info.address }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Information -->
+            <div class="profile-section">
+                <h2>
+                    <i class="fas fa-car"></i>
+                    Vehicle Information
+                </h2>
+                
+                <div class="profile-field">
+                    <label>Vehicle Registration ID</label>
+                    <div class="value">
+                        <i class="fas fa-id-card"></i>
+                        <span>{{ user_info.vehicle_id }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Car Brand</label>
+                    <div class="value">
+                        <i class="fas fa-tag"></i>
+                        <span>{{ user_info.car_brand }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <label>Car Model</label>
+                    <div class="value">
+                        <i class="fas fa-car-side"></i>
+                        <span>{{ user_info.model }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{{ url_for('edit_profile') }}" class="btn-action btn-edit">
+                <i class="fas fa-edit"></i>
+                Edit Profile
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn-action btn-dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

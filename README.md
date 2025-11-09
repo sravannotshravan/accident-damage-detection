@@ -85,6 +85,28 @@ The detected parts are highlighted in the image, and the system estimates repair
 
 ## 📝 Setup and Installation
 
+### ⚠️ Important: Security Setup
+
+Before running the application, set up your credentials:
+
+1. **Create `.env` file**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your SECRET_KEY
+   ```
+
+2. **Create `config.py` file**:
+   ```bash
+   cp config.template.py config.py
+   # Edit config.py and add your MySQL password
+   ```
+
+3. **Never commit** `.env` or `config.py` files! They contain sensitive information.
+
+### 📥 Installation Steps
+
+## 📝 Setup and Installation
+
 ### Prerequisites
 - Python 3.11.8
 - MySQL Server

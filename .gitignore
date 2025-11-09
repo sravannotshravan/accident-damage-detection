@@ -1,0 +1,139 @@
+# Environment Variables (SENSITIVE - Contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+.venv/
+ENV/
+env/
+.virtualenv/
+
+# MySQL Database Credentials (SENSITIVE)
+config.py
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+.webassets-cache
+*.log
+
+# Uploaded Images and Generated Files
+static/uploaded_image.jpg
+static/detected_image.jpg
+static/uploads/
+static/temp/
+
+# Model Weights (Large files - optional, uncomment if needed)
+# models/best.pt
+# models/model weights/best.pt
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Database dumps and backups
+*.sql.backup
+*.sql.bak
+backup_*.sql
+backups/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env.backup
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Debug and test scripts (optional - uncomment if you don't want to commit these)
+debug_*.py
+test_*.py
+fix_*.py
+setup_database.py
+show_available_cars.py
